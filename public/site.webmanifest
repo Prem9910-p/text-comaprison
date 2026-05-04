@@ -1,0 +1,21 @@
+{
+  "name": "Text Comparison — Online Diff Tool",
+  "short_name": "Text Compare",
+  "description": "Compare two texts side by side with line and word-level highlights in your browser.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1218",
+  "theme_color": "#15803d",
+  "lang": "en",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

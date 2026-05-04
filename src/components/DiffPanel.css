@@ -1,0 +1,408 @@
+/* IDE-style diff (line numbers + gutter + code × 2 panes) */
+.diff-panel--ide {
+  --diff-ide-bg: #1e1e1e;
+  --diff-ide-bg-alt: #252526;
+  --diff-ide-ln: #858585;
+  --diff-ide-text: #d4d4d4;
+  --diff-ide-border: #3c3c3c;
+  --diff-line-mod-bg: rgba(46, 160, 67, 0.18);
+  --diff-line-add-bg: rgba(46, 160, 67, 0.14);
+  --diff-line-del-bg: rgba(244, 67, 54, 0.12);
+  --diff-word-bg: #264f78;
+  --diff-word-text: #e0eaf5;
+  --diff-gutter-green: #3fb950;
+  --diff-gutter-orange: #fda34c;
+  --diff-gutter-red: #f85149;
+}
+
+.app--light .diff-panel--ide {
+  --diff-ide-bg: #ffffff;
+  --diff-ide-bg-alt: #f6f8fa;
+  --diff-ide-ln: #656d76;
+  --diff-ide-text: #24292f;
+  --diff-ide-border: #d0d7de;
+  --diff-line-mod-bg: rgba(46, 160, 67, 0.12);
+  --diff-line-add-bg: rgba(46, 160, 67, 0.1);
+  --diff-line-del-bg: rgba(248, 81, 73, 0.1);
+  --diff-word-bg: #0969da;
+  --diff-word-text: #ffffff;
+  --diff-gutter-green: #1a7f37;
+  --diff-gutter-orange: #bc4c00;
+  --diff-gutter-red: #cf222e;
+}
+
+.diff-panel {
+  margin-top: 0;
+  width: 100%;
+  border-radius: var(--tc-radius-lg, 12px);
+  border: 1px solid var(--tc-border);
+  overflow: hidden;
+  background: var(--tc-panel);
+  box-shadow: var(--tc-shadow-md);
+}
+
+.diff-panel--ide {
+  background: var(--diff-ide-bg);
+  border-color: var(--diff-ide-border);
+}
+
+.diff-panel--empty {
+  padding: 1.35rem 1.5rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--tc-muted);
+}
+
+/* Top summary bar */
+.diff-panel__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: 1rem 1.25rem 1.1rem;
+  background: var(--tc-bg-elevated);
+  border-bottom: 1px solid var(--tc-border);
+}
+
+.diff-panel__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--tc-heading);
+}
+
+.diff-panel__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--tc-muted);
+}
+
+.diff-panel__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.diff-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-panel);
+}
+
+.diff-stat__label {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.diff-stat__value {
+  font-family: var(--tc-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.diff-stat--removed {
+  border-color: var(--tc-removed-border);
+  color: var(--tc-removed-fg);
+  background: var(--tc-removed-bg);
+}
+
+.diff-stat--added {
+  border-color: var(--tc-added-border);
+  color: var(--tc-added-fg);
+  background: var(--tc-added-bg);
+}
+
+.diff-stat--same {
+  color: var(--tc-muted);
+  background: var(--tc-same-bg);
+}
+
+.diff-panel__body {
+  width: 100%;
+}
+
+.diff-panel__scroll {
+  max-height: min(56vh, 680px);
+  overflow: auto;
+  width: 100%;
+}
+
+.diff-panel__scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.diff-panel__scroll::-webkit-scrollbar-thumb {
+  background: var(--diff-ide-border);
+  border-radius: 999px;
+}
+
+/* Two-pane header: Ln | gutter | code */
+.diff-panel__headers--ide {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--diff-ide-bg-alt);
+  border-bottom: 1px solid var(--diff-ide-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.app--light .diff-panel__headers--ide {
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.diff-header-pane {
+  display: grid;
+  grid-template-columns: 2.75rem 1.55rem 1fr;
+  align-items: center;
+  min-height: 2.25rem;
+  border-right: 1px solid var(--diff-ide-border);
+}
+
+.diff-header-pane--right {
+  border-right: none;
+}
+
+.diff-header-ln {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--diff-ide-ln);
+  text-align: right;
+  padding-right: 0.35rem;
+  font-family: var(--tc-mono);
+}
+
+.diff-header-gutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--diff-ide-border);
+  border-right: 1px solid var(--diff-ide-border);
+}
+
+.diff-header-gutter__nav {
+  font-size: 0.65rem;
+  color: var(--diff-gutter-green);
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.diff-header-code {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--diff-ide-ln);
+  padding-left: 0.5rem;
+}
+
+/* 6-column table */
+.diff-table--ide {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: var(--tc-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: var(--diff-ide-bg);
+  color: var(--diff-ide-text);
+}
+
+.diff-table__ln {
+  width: 2.75rem;
+  vertical-align: top;
+  padding: 0.2rem 0.35rem 0.2rem 0.5rem;
+  text-align: right;
+  user-select: none;
+  border-bottom: 1px solid var(--diff-ide-border);
+  background: var(--diff-ide-bg-alt);
+  border-right: 1px solid var(--diff-ide-border);
+}
+
+.diff-ln {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--diff-ide-ln);
+  font-variant-numeric: tabular-nums;
+}
+
+.diff-ln--empty {
+  opacity: 0.35;
+}
+
+.diff-gutter {
+  width: 1.55rem;
+  vertical-align: top;
+  padding: 0;
+  position: relative;
+  border-bottom: 1px solid var(--diff-ide-border);
+  border-right: 1px solid var(--diff-ide-border);
+  background: var(--diff-ide-bg-alt);
+}
+
+.diff-gutter--none {
+  background: var(--diff-ide-bg-alt);
+}
+
+.diff-gutter--modified {
+  background: var(--diff-line-mod-bg);
+}
+
+.diff-gutter__bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--diff-gutter-green);
+  border-radius: 0 1px 1px 0;
+}
+
+.diff-gutter__bar--del {
+  background: var(--diff-gutter-red);
+}
+
+.diff-gutter__bar--add {
+  background: var(--diff-gutter-green);
+}
+
+.diff-gutter__arrow {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.55rem;
+  line-height: 1;
+  color: var(--diff-gutter-orange);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.diff-gutter__mark {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.diff-gutter__mark--del {
+  color: var(--diff-gutter-red);
+}
+
+.diff-gutter__mark--add {
+  color: var(--diff-gutter-green);
+}
+
+.diff-table__code {
+  vertical-align: top;
+  padding: 0.2rem 0.65rem 0.2rem 0.75rem;
+  border-bottom: 1px solid var(--diff-ide-border);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.diff-table__code--same {
+  background: var(--diff-ide-bg);
+}
+
+.diff-table__row:nth-child(even) .diff-table__code--same {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.app--light .diff-table__row:nth-child(even) .diff-table__code--same {
+  background: #fafbfc;
+}
+
+/* Modified line: green wash + blue tokens */
+.diff-table__row--modified .diff-table__ln,
+.diff-table__row--modified .diff-gutter {
+  background: var(--diff-line-mod-bg);
+}
+
+.diff-table__code--modified {
+  background: var(--diff-line-mod-bg);
+}
+
+.diff-table__row--removed .diff-table__ln,
+.diff-table__row--removed .diff-gutter {
+  background: var(--diff-line-del-bg);
+}
+
+.diff-table__code--removed {
+  background: var(--diff-line-del-bg);
+  color: var(--diff-ide-text);
+}
+
+.diff-table__row--added .diff-table__ln,
+.diff-table__row--added .diff-gutter {
+  background: var(--diff-line-add-bg);
+}
+
+.diff-table__code--added {
+  background: var(--diff-line-add-bg);
+  color: var(--diff-ide-text);
+}
+
+.diff-table__code--gap {
+  background: var(--diff-ide-bg-alt);
+  opacity: 0.85;
+}
+
+.diff-table__line--words {
+  display: inline;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-word--plain {
+  /* inherits */
+}
+
+/* IDE-style blue highlight for changed tokens (screenshot) */
+.diff-word--token {
+  border-radius: 2px;
+  padding: 0.06em 0.1em;
+  margin: 0 -0.02em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background: var(--diff-word-bg);
+  color: var(--diff-word-text);
+  outline: 1px solid rgba(255, 255, 255, 0.12);
+  outline-offset: -1px;
+}
+
+.app--light .diff-word--token {
+  outline-color: rgba(0, 0, 0, 0.08);
+}
+
+.diff-table__line:empty::before {
+  content: '\00a0';
+  opacity: 0;
+}

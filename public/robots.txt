@@ -1,0 +1,7 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow nothing — SPA shell is served from /
+# After deployment, uncomment and set your live origin:
+# Sitemap: https://YOUR-DOMAIN.example/sitemap.xml
