@@ -1,17 +1,13 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { DiffPanel, buildDiffRows } from './components/DiffPanel'
-import {
-  type PreprocessOptions,
-  preprocessText,
-} from './utils/preprocess'
+import { useCallback, useEffect, useState } from 'react'
+import { CaseConverterTool } from './tools/CaseConverterTool'
+import { CompareTool } from './tools/CompareTool'
+import { DedupeLinesTool } from './tools/DedupeLinesTool'
+import { HomeTools } from './tools/HomeTools'
+import { JsonFormatterTool } from './tools/JsonFormatterTool'
+import { getToolTitle, parseToolFromHash } from './tools/toolConfig'
+import type { ToolId } from './tools/types'
+import { WordCounterTool } from './tools/WordCounterTool'
 import './App.css'
-
-const defaultOptions: PreprocessOptions = {
-  toLowercase: false,
-  sortLines: false,
-  replaceLineBreaksWithSpaces: false,
-  removeExcessWhitespace: false,
-}
 
 function useTheme() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -34,64 +30,33 @@ function useTheme() {
   return { theme, toggle }
 }
 
+
 export default function App() {
   const { theme, toggle } = useTheme()
-  const leftRef = useRef<HTMLTextAreaElement>(null)
-  const rightRef = useRef<HTMLTextAreaElement>(null)
-  const compareResultRef = useRef<HTMLDivElement>(null)
-  const optionsId = useId()
+  const [activeTool, setActiveTool] = useState<ToolId>(() => {
+    if (typeof window === 'undefined') return 'home'
+    return parseToolFromHash(window.location.hash)
+  })
 
-  const [left, setLeft] = useState('')
-  const [right, setRight] = useState('')
-  const [opts, setOpts] = useState<PreprocessOptions>(defaultOptions)
-  const [compared, setCompared] = useState(false)
-
-  const processed = useMemo(() => {
-    return {
-      left: preprocessText(left, opts),
-      right: preprocessText(right, opts),
-    }
-  }, [left, right, opts])
-
-  const identical = processed.left === processed.right
-
-  const diffRows = useMemo(() => {
-    if (!compared || identical) return null
-    return buildDiffRows(processed.left, processed.right)
-  }, [compared, identical, processed.left, processed.right])
-
-  const runCompare = useCallback(() => {
-    setCompared(true)
+  const navigateTool = useCallback((tool: ToolId) => {
+    setActiveTool(tool)
   }, [])
-
-  const clearAll = useCallback(() => {
-    setLeft('')
-    setRight('')
-    setCompared(false)
-    setOpts(defaultOptions)
-  }, [])
-
-  const switchTexts = useCallback(() => {
-    setLeft(right)
-    setRight(left)
-    setCompared(false)
-  }, [left, right])
-
-  const focusEditors = useCallback(() => {
-    leftRef.current?.focus()
-    leftRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [])
-
-  const toggleOption = (key: keyof PreprocessOptions) => {
-    setOpts((o) => ({ ...o, [key]: !o[key] }))
-    setCompared(false)
-  }
 
   useEffect(() => {
-    if (compared) {
-      compareResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (typeof window === 'undefined') return
+    const nextHash = `#${activeTool}`
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, '', nextHash)
     }
-  }, [compared])
+  }, [activeTool])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onHashChange = () => setActiveTool(parseToolFromHash(window.location.hash))
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+  const toolTitle = getToolTitle(activeTool)
 
   return (
     <div className={`app app--${theme}`} data-theme={theme}>
@@ -109,125 +74,27 @@ export default function App() {
         >
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
-        <h1 className="app__title">Text Compare!</h1>
+        <h1 className="app__title">{toolTitle}</h1>
       </header>
 
       <main className="app__main">
-        <div className="toolbar">
-          <div className="toolbar__group toolbar__group--left">
-            <button type="button" className="btn btn--ghost" onClick={focusEditors}>
-              Edit texts...
-            </button>
-            <button type="button" className="btn btn--ghost" onClick={switchTexts}>
-              Switch texts
+        {activeTool !== 'home' && (
+          <div className="tool-nav">
+            <button type="button" className="btn btn--ghost" onClick={() => navigateTool('home')}>
+              ← Back to tools
             </button>
           </div>
-          <button type="button" className="btn btn--primary" onClick={runCompare}>
-            Compare!
-          </button>
-          <div className="toolbar__group toolbar__group--right">
-            <button type="button" className="btn btn--ghost" onClick={clearAll}>
-              Clear all
-            </button>
-          </div>
-        </div>
+        )}
 
-        <div className="compare-result" ref={compareResultRef}>
-          {compared && identical && (
-            <div className="diff-identical">
-              <p>No differences — texts match (after preprocessing).</p>
-            </div>
-          )}
-          {compared && !identical && diffRows !== null && (
-            <DiffPanel
-              leftLabel="Original"
-              rightLabel="Revised"
-              rows={diffRows}
-            />
-          )}
-        </div>
-
-        <div className="editors" aria-label="Text inputs">
-          <label className="editor editor--plain">
-            <span className="sr-only">Original text</span>
-            <textarea
-              ref={leftRef}
-              className="editor__field"
-              placeholder="Paste one version of a text here."
-              value={left}
-              onChange={(e) => {
-                setLeft(e.target.value)
-                setCompared(false)
-              }}
-              spellCheck={false}
-            />
-          </label>
-          <label className="editor editor--plain">
-            <span className="sr-only">Revised text</span>
-            <textarea
-              ref={rightRef}
-              className="editor__field"
-              placeholder="Paste another version of the text here."
-              value={right}
-              onChange={(e) => {
-                setRight(e.target.value)
-                setCompared(false)
-              }}
-              spellCheck={false}
-            />
-          </label>
-        </div>
-
-        <fieldset className="options" aria-labelledby={optionsId}>
-          <legend id={optionsId} className="options__legend">
-            Text options
-          </legend>
-          <ul className="options__list">
-            <li>
-              <label className="options__item">
-                <input
-                  type="checkbox"
-                  checked={opts.toLowercase}
-                  onChange={() => toggleOption('toLowercase')}
-                />
-                To lowercase
-              </label>
-            </li>
-            <li>
-              <label className="options__item">
-                <input
-                  type="checkbox"
-                  checked={opts.sortLines}
-                  onChange={() => toggleOption('sortLines')}
-                />
-                Sort lines
-              </label>
-            </li>
-            <li>
-              <label className="options__item">
-                <input
-                  type="checkbox"
-                  checked={opts.replaceLineBreaksWithSpaces}
-                  onChange={() => toggleOption('replaceLineBreaksWithSpaces')}
-                />
-                Replace line breaks with spaces
-              </label>
-            </li>
-            <li>
-              <label className="options__item">
-                <input
-                  type="checkbox"
-                  checked={opts.removeExcessWhitespace}
-                  onChange={() => toggleOption('removeExcessWhitespace')}
-                />
-                Remove excess white space
-              </label>
-            </li>
-          </ul>
-        </fieldset>
+        {activeTool === 'home' && <HomeTools onNavigate={navigateTool} />}
+        {activeTool === 'compare' && <CompareTool />}
+        {activeTool === 'word-counter' && <WordCounterTool />}
+        {activeTool === 'dedupe-lines' && <DedupeLinesTool />}
+        {activeTool === 'case-converter' && <CaseConverterTool />}
+        {activeTool === 'json-formatter' && <JsonFormatterTool />}
 
         <p className="privacy-note">
-          Comparison runs in your browser — text is not sent to any server.
+          All tools run in your browser — text is not sent to any server.
         </p>
       </main>
 
