@@ -35,6 +35,10 @@ const validToolIds = new Set<ToolId>([
   'dedupe-lines',
   'case-converter',
   'json-formatter',
+  'about-us',
+  'contact-us',
+  'privacy-policy',
+  'terms-and-conditions',
 ])
 
 export function parseToolFromHash(hash: string): ToolId {
@@ -44,5 +48,9 @@ export function parseToolFromHash(hash: string): ToolId {
 
 export function getToolTitle(activeTool: ToolId): string {
   if (activeTool === 'home') return 'Text Utilities'
+  if (activeTool === 'about-us') return 'About Us'
+  if (activeTool === 'contact-us') return 'Contact Us'
+  if (activeTool === 'privacy-policy') return 'Privacy Policy'
+  if (activeTool === 'terms-and-conditions') return 'Terms & Conditions'
   return toolCards.find((tool) => tool.id === activeTool)?.name ?? 'Text Utilities'
 }

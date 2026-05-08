@@ -291,6 +291,51 @@
   max-width: 42rem;
 }
 
+.ad-slot {
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.35rem;
+  border: 1px dashed var(--tc-border);
+  border-radius: 10px;
+  background: var(--tc-bg-elevated);
+}
+
+.ad-slot--bottom {
+  margin: 1rem 0 0;
+}
+
+.ad-slot__fallback {
+  margin: 0;
+  text-align: center;
+  color: var(--tc-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.video-ad {
+  width: 100%;
+  margin: 1rem 0 0;
+  padding: 0.35rem;
+  border: 1px dashed var(--tc-border);
+  border-radius: 10px;
+  background: var(--tc-bg-elevated);
+}
+
+.video-ad__frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-ad__frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .compare-result {
   min-height: 0;
   width: 100%;
@@ -317,10 +362,8 @@
 
 .app__footer {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem 1.25rem;
   width: 100%;
   padding: 1.15rem clamp(1rem, 3vw, 2rem);
   margin-top: auto;
@@ -331,18 +374,54 @@
   background: var(--tc-bg-elevated);
 }
 
-.app__footer-key {
-  opacity: 0.55;
+.app__footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
 }
 
-.app__footer-links a {
+.app__footer-link {
+  border: none;
+  background: transparent;
   color: var(--tc-link);
   font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
   text-decoration: none;
+  padding: 0;
 }
 
-.app__footer-links a:hover {
+.app__footer-link:hover {
   text-decoration: underline;
+}
+
+.app__footer-link:focus-visible {
+  outline: 2px solid var(--tc-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.info-page {
+  margin-top: 0.25rem;
+  max-width: 68ch;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info-page h2 {
+  margin: 0;
+  color: var(--tc-heading);
+}
+
+.info-page p {
+  margin: 0;
+  color: var(--tc-text);
+  line-height: 1.65;
+}
+
+.info-page a {
+  color: var(--tc-link);
 }
 
 .sr-only {
