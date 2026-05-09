@@ -14,6 +14,8 @@ type FlatLine =
   | { t: 'rem'; line: string }
   | { t: 'add'; line: string }
 
+const MODIFIED_LINE_SIMILARITY_THRESHOLD = 0.34
+
 function splitLines(value: string): string[] {
   if (value === '') return []
   const core = value.endsWith('\n') ? value.slice(0, -1) : value
@@ -34,6 +36,106 @@ function flatFromDiffLines(leftText: string, rightText: string): FlatLine[] {
   return out
 }
 
+function lineSimilarity(a: string, b: string): number {
+  if (a === b) return 1
+  if (a.length === 0 || b.length === 0) return 0
+
+  const n = a.length
+  const m = b.length
+  const prev = new Array<number>(m + 1).fill(0)
+  const cur = new Array<number>(m + 1).fill(0)
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (a.charCodeAt(i - 1) === b.charCodeAt(j - 1)) {
+        cur[j] = prev[j - 1] + 1
+      } else {
+        cur[j] = prev[j] > cur[j - 1] ? prev[j] : cur[j - 1]
+      }
+    }
+    for (let j = 0; j <= m; j++) {
+      prev[j] = cur[j]
+      cur[j] = 0
+    }
+  }
+
+  const lcs = prev[m]
+  return (2 * lcs) / (n + m)
+}
+
+function alignRemovedAndAdded(
+  removed: { t: 'rem'; line: string }[],
+  added: { t: 'add'; line: string }[],
+): DiffRow[] {
+  const n = removed.length
+  const m = added.length
+  const score = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0))
+  const action = Array.from({ length: n + 1 }, () => new Array<'pair' | 'up' | 'left' | null>(m + 1).fill(null))
+
+  for (let i = 1; i <= n; i++) {
+    action[i][0] = 'up'
+  }
+  for (let j = 1; j <= m; j++) {
+    action[0][j] = 'left'
+  }
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const sim = lineSimilarity(removed[i - 1].line, added[j - 1].line)
+      const pairScore =
+        sim >= MODIFIED_LINE_SIMILARITY_THRESHOLD
+          ? score[i - 1][j - 1] + sim
+          : Number.NEGATIVE_INFINITY
+      const upScore = score[i - 1][j]
+      const leftScore = score[i][j - 1]
+
+      if (pairScore >= upScore && pairScore >= leftScore) {
+        score[i][j] = pairScore
+        action[i][j] = 'pair'
+      } else if (upScore >= leftScore) {
+        score[i][j] = upScore
+        action[i][j] = 'up'
+      } else {
+        score[i][j] = leftScore
+        action[i][j] = 'left'
+      }
+    }
+  }
+
+  const reversed: DiffRow[] = []
+  let i = n
+  let j = m
+  while (i > 0 || j > 0) {
+    const step = action[i][j]
+    if (step === 'pair' && i > 0 && j > 0) {
+      reversed.push({
+        mode: 'modified',
+        left: removed[i - 1].line,
+        right: added[j - 1].line,
+      })
+      i--
+      j--
+      continue
+    }
+    if (step === 'up' && i > 0) {
+      reversed.push({ mode: 'removed-only', left: removed[i - 1].line })
+      i--
+      continue
+    }
+    if (j > 0) {
+      reversed.push({ mode: 'added-only', right: added[j - 1].line })
+      j--
+      continue
+    }
+    if (i > 0) {
+      reversed.push({ mode: 'removed-only', left: removed[i - 1].line })
+      i--
+    }
+  }
+
+  return reversed.reverse()
+}
+
 function mergeToRows(flat: FlatLine[]): DiffRow[] {
   const rows: DiffRow[] = []
   let i = 0
@@ -46,22 +148,7 @@ function mergeToRows(flat: FlatLine[]): DiffRow[] {
       while (k < flat.length && flat[k].t === 'add') k++
       const rem = flat.slice(i, j) as { t: 'rem'; line: string }[]
       const add = flat.slice(j, k) as { t: 'add'; line: string }[]
-      const n = rem.length
-      const m = add.length
-      const pairCount = Math.min(n, m)
-      for (let p = 0; p < pairCount; p++) {
-        rows.push({
-          mode: 'modified',
-          left: rem[p].line,
-          right: add[p].line,
-        })
-      }
-      for (let p = pairCount; p < n; p++) {
-        rows.push({ mode: 'removed-only', left: rem[p].line })
-      }
-      for (let p = pairCount; p < m; p++) {
-        rows.push({ mode: 'added-only', right: add[p].line })
-      }
+      rows.push(...alignRemovedAndAdded(rem, add))
       i = k
     } else if (cur.t === 'add') {
       rows.push({ mode: 'added-only', right: cur.line })
