@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Base64Tool } from './tools/Base64Tool'
+import { BarcodeGeneratorTool } from './tools/BarcodeGeneratorTool'
 import { CaseConverterTool } from './tools/CaseConverterTool'
 import { CompareTool } from './tools/CompareTool'
 import { DedupeLinesTool } from './tools/DedupeLinesTool'
 import { HomeTools } from './tools/HomeTools'
 import { JsonFormatterTool } from './tools/JsonFormatterTool'
-import { getToolTitle, parseToolFromHash } from './tools/toolConfig'
+import { QrCodeGeneratorTool } from './tools/QrCodeGeneratorTool'
+import { TypingTestTool } from './tools/TypingTestTool'
+import {
+  getPathForTool,
+  getToolTitle,
+  parseToolFromHash,
+  parseToolFromPath,
+} from './tools/toolConfig'
 import type { ToolId } from './tools/types'
 import { WordCounterTool } from './tools/WordCounterTool'
 import './App.css'
@@ -68,6 +77,34 @@ const SEO_BY_PAGE: Record<ToolId, SeoEntry> = {
       'Validate, beautify, and minify JSON quickly in your browser using this free JSON formatter and validator tool.',
     keywords:
       'json formatter, json validator, json beautifier, json minifier, pretty print json, format json online',
+  },
+  'typing-test': {
+    title: 'Typing Test - Check Typing Speed and Accuracy',
+    description:
+      'Take a free 60-second typing test to measure words per minute and typing accuracy in your browser.',
+    keywords:
+      'typing test, typing speed test, typing accuracy test, wpm test, online typing practice, free typing tool',
+  },
+  'qr-code-generator': {
+    title: 'QR Code Generator - Create and Download QR Codes',
+    description:
+      'Generate QR codes instantly from URLs or text and download them as images with this free QR code generator.',
+    keywords:
+      'qr code generator, create qr code, free qr generator, qr code for url, download qr code image, online qr maker',
+  },
+  base64: {
+    title: 'Base64 Encode Decode Tool - Convert Text and Base64',
+    description:
+      'Encode text into Base64 and decode Base64 back to plain text instantly with this free browser-based Base64 converter.',
+    keywords:
+      'base64 encode, base64 decode, base64 converter, text to base64, base64 to text, online base64 tool',
+  },
+  'barcode-generator': {
+    title: 'Barcode Generator - Create and Download Barcode Images',
+    description:
+      'Generate barcodes online in Code 128, EAN-13, UPC, and ITF-14 formats and download them instantly.',
+    keywords:
+      'barcode generator, create barcode online, code 128 generator, ean13 barcode, upc barcode generator, download barcode image',
   },
   'about-us': {
     title: 'About Us - Text Utilities Project',
@@ -276,26 +313,34 @@ export default function App() {
   const { theme, toggle } = useTheme()
   const [activeTool, setActiveTool] = useState<ToolId>(() => {
     if (typeof window === 'undefined') return 'home'
+    const fromPath = parseToolFromPath(window.location.pathname)
+    if (fromPath !== 'home' || window.location.pathname === '/') return fromPath
     return parseToolFromHash(window.location.hash)
   })
 
   const navigateTool = useCallback((tool: ToolId) => {
+    if (typeof window !== 'undefined') {
+      const nextPath = getPathForTool(tool)
+      if (window.location.pathname !== nextPath) {
+        window.history.pushState(null, '', nextPath)
+      }
+    }
     setActiveTool(tool)
   }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const nextHash = `#${activeTool}`
-    if (window.location.hash !== nextHash) {
-      window.history.replaceState(null, '', nextHash)
+    const nextPath = getPathForTool(activeTool)
+    if (window.location.pathname !== nextPath || window.location.hash) {
+      window.history.replaceState(null, '', nextPath)
     }
   }, [activeTool])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const onHashChange = () => setActiveTool(parseToolFromHash(window.location.hash))
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    const onPopState = () => setActiveTool(parseToolFromPath(window.location.pathname))
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
   useEffect(() => {
@@ -348,6 +393,10 @@ export default function App() {
         {activeTool === 'dedupe-lines' && <DedupeLinesTool />}
         {activeTool === 'case-converter' && <CaseConverterTool />}
         {activeTool === 'json-formatter' && <JsonFormatterTool />}
+        {activeTool === 'typing-test' && <TypingTestTool />}
+        {activeTool === 'qr-code-generator' && <QrCodeGeneratorTool />}
+        {activeTool === 'base64' && <Base64Tool />}
+        {activeTool === 'barcode-generator' && <BarcodeGeneratorTool />}
         {(activeTool === 'about-us' ||
           activeTool === 'contact-us' ||
           activeTool === 'privacy-policy' ||
