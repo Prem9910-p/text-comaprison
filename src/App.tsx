@@ -261,13 +261,23 @@ function InfoPage({ page }: { page: ToolId }) {
       <section className="info-page">
         <h2>Privacy Policy</h2>
         <p>
-          Your privacy is a core feature of this project. Text you enter is processed in your
-          browser and is not uploaded to any server by the app.
+          Privacy Policy
+
+Your privacy is important to us. This website is designed to provide fast and privacy-friendly text utilities for users.
+
+Most text processing happens directly in your browser, and we do not permanently store the text you enter on our servers.
+
+We may store limited browser data such as theme preference (dark/light mode) using local storage to improve user experience.
+
+This website may use third-party services such as Google AdSense and analytics tools that may use cookies to personalize ads, analyze traffic, and improve services.
+
+Google and its partners may use cookies to serve ads based on your visit to this and other websites. Users may opt out of personalized advertising by visiting Google Ads Settings.
+
+No account registration is required to use the tools, and we do not intentionally collect sensitive personal information.
+
+By using this website, you agree to this privacy policy.
         </p>
-        <p>
-          The app stores only your theme preference in local storage to remember dark or light mode.
-          No account is required and no personal profile is created.
-        </p>
+        
       </section>
     )
   }
@@ -276,12 +286,19 @@ function InfoPage({ page }: { page: ToolId }) {
     <section className="info-page">
       <h2>Terms &amp; Conditions</h2>
       <p>
-        These tools are provided for general use on an &quot;as is&quot; basis. You are responsible
-        for reviewing output before using it in important documents or production systems.
-      </p>
-      <p>
-        By using this app, you agree not to misuse the service, attempt to disrupt availability, or
-        upload content that violates applicable laws.
+By using this website and its tools, you agree to these terms and conditions.
+
+All tools and services are provided on an "as is" and "as available" basis without warranties of any kind. While we aim to provide accurate and reliable results, we do not guarantee the completeness, accuracy, or reliability of any generated output.
+
+Users are responsible for reviewing and verifying all output before using it in important documents, projects, or production systems.
+
+You agree not to misuse the website, attempt to disrupt services, upload malicious content, or use the platform for unlawful activities.
+
+We may update, modify, or discontinue tools and features at any time without prior notice.
+
+This website may display third-party advertisements and links, including Google AdSense ads.
+
+By continuing to use this website, you accept these terms and conditions.
       </p>
     </section>
   )
