@@ -247,7 +247,7 @@ function InfoPage({ page }: { page: ToolId }) {
           to hear from you.
         </p>
         <p>
-          Email: <a href="mailto:support@textutilities.local">support@textutilities.local</a>
+          Email: <a href="mailto:prem60866@gmail.com">prem60866@gmail.com</a>
         </p>
         <p>
           Please include the tool name and a short example so we can reproduce your issue quickly.
