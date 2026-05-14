@@ -363,12 +363,12 @@ export default function App() {
   useEffect(() => {
     if (typeof document === 'undefined') return
     const seo = SEO_BY_PAGE[activeTool]
-    document.title = `${seo.title} | Text Comparison`
+    document.title = `${seo.title} | Free Text And Tools`
     setMetaContent('description', seo.description)
     setMetaContent('keywords', seo.keywords)
-    setPropertyMetaContent('og:title', `${seo.title} | Text Comparison`)
+    setPropertyMetaContent('og:title', `${seo.title} | Free Text And Tools`)
     setPropertyMetaContent('og:description', seo.description)
-    setMetaContent('twitter:title', `${seo.title} | Text Comparison`)
+    setMetaContent('twitter:title', `${seo.title} | Free Text And Tools`)
     setMetaContent('twitter:description', seo.description)
   }, [activeTool])
 
